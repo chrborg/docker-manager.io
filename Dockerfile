@@ -1,17 +1,17 @@
 FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
 
+ARG TARGETARCH
+
 RUN apt update; \
-    apt install unzip; \
+    apt install -y unzip wget; \
     apt clean; \
     rm -rf /var/lib/apt/lists/*
 
 RUN sed -i "s|DEFAULT@SECLEVEL=2|DEFAULT@SECLEVEL=1|g" /etc/ssl/openssl.cnf
 
-ADD https://github.com/Manager-io/Manager/releases/download/23.3.21.732/ManagerServer-linux-x64.tar.gz /tmp/manager-server.tar.gz
-
-RUN mkdir /opt/manager-server/; \
-    tar -xzf /tmp/manager-server.tar.gz -C /opt/manager-server/; \
-    rm -f /tmp/manager-server.tar.gz; \
+RUN if [ "$TARGETARCH" = "arm64" ] ; then ARCH="arm64" ; else ARCH="x64" ; fi; \
+    mkdir /opt/manager-server; \
+    wget -q -O - "https://github.com/Manager-io/Manager/releases/latest/download/ManagerServer-linux-$ARCH.tar.gz" | tar -zxC /opt/manager-server; \
     chmod +x /opt/manager-server/ManagerServer
 
 # Run instance of Manager

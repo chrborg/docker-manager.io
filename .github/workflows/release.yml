@@ -1,0 +1,28 @@
+name: release
+
+on:
+  push:
+    branches: 
+      - main
+    paths-ignore:
+      - 'README.md'
+      - 'LICENCE'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+      - name: install buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v1
+        with:
+          version: latest
+      - name: login to docker hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+      - name: build the image
+        run: |
+          docker buildx build --push \
+            --tag ${{ secrets.DOCKER_HUB_USERNAME }}/manager.io:latest \
+            --platform linux/amd64,linux/arm64 .
